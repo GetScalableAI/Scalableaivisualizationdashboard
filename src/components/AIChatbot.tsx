@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Send, BookOpen, Database, Star, Trash2, Download, PlusCircle } from 'lucide-react';
+import { Send, BookOpen, Database, Star, Trash2, Download, PlusCircle, File, X, Book } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import PDFDragDrop from './PDFDragDrop';
 
 type ChatMode = 'data-queries' | 'equipment-manuals';
 
@@ -21,6 +22,15 @@ export default function AIChatbot() {
   const [mode, setMode] = useState<ChatMode>('data-queries');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  const handleFileDrop = (file: File) => {
+    setUploadedFile(file);
+  };
+
+  const handleRemoveFile = () => {
+    setUploadedFile(null);
+  };
 
   // Mock conversation history
   const conversationHistory = [
@@ -34,6 +44,12 @@ export default function AIChatbot() {
     'Show open POs by supplier',
     'Weekly OEE comparison',
     'Top 5 quality issues',
+  ];
+
+  const manuals = [
+    '024-Nitrogen-Catalog-9800c04600024.pdf',
+    '2023_1091-SpecSpring-Conv Guide Trifold_03.indd',
+    '2021_312-DieSpring Comparison 8pg_5.indd',
   ];
 
   // Sample chart data for demo responses
@@ -61,7 +77,7 @@ export default function AIChatbot() {
   };
 
   const handleSend = () => {
-    if (!input.trim()) return;
+    if (!input.trim() && !uploadedFile) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -126,10 +142,17 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
       }
     } else {
       // Equipment manuals mode
-      assistantMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `To calibrate Machine #47, follow these steps:
+      if (uploadedFile) {
+        assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `I have received the file "${uploadedFile.name}". I am now ready to answer your questions about it.`,
+        };
+      } else {
+        assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `To calibrate Machine #47, follow these steps:
 
 1. Power down the machine completely and wait 2 minutes
 2. Access the calibration menu using the control panel (Settings > Maintenance > Calibration)
@@ -137,8 +160,9 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
 4. Test the calibration with a sample part before resuming production
 
 **Important:** Only certified technicians should perform calibration procedures.`,
-        source: 'Machine #47 Manual, Page 23',
-      };
+          source: 'Machine #47 Manual, Page 23',
+        };
+      }
     }
 
     setMessages([...messages, userMessage, assistantMessage]);
@@ -246,9 +270,49 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
             }`}
           >
             <BookOpen className="w-4 h-4" />
-            <span className="text-sm font-medium">Manuals</span>
+            <span className="text-sm font-medium">Parts Lookup</span>
           </button>
         </div>
+
+        {/* Add Manuals Dropzone */}
+        {mode === 'equipment-manuals' && (
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Add Manuals</h3>
+            {!uploadedFile ? (
+              <PDFDragDrop onFileDrop={handleFileDrop} />
+            ) : (
+              <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <File className="w-5 h-5 text-gray-500" />
+                  <span className="text-sm text-gray-700 truncate">{uploadedFile.name}</span>
+                </div>
+                <button onClick={handleRemoveFile} className="p-1 hover:bg-gray-200 rounded-full">
+                  <X className="w-4 h-4 text-gray-600" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Manuals List */}
+        {mode === 'equipment-manuals' && (
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Available Manuals</h3>
+            <div className="space-y-2">
+              {manuals.map((manual, index) => (
+                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <File className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-700 truncate">{manual}</span>
+                  </div>
+                  <button className="p-1 hover:bg-gray-200 rounded-full">
+                    <Trash2 className="w-3 h-3 text-gray-600" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Recent Conversations */}
         <div className="flex-1 overflow-y-auto">
@@ -295,12 +359,12 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
         {/* Chat Header */}
         <div className="border-b border-gray-200 p-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            {mode === 'data-queries' ? 'Manufacturing Data Assistant' : 'Equipment Documentation Assistant'}
+            {mode === 'data-queries' ? 'Manufacturing Data Assistant' : 'Parts Lookup Chatbot'}
           </h2>
           <p className="text-sm text-gray-600 mt-1">
             {mode === 'data-queries' 
               ? 'Ask questions about your production, invoices, and purchase orders'
-              : 'Search equipment manuals and maintenance documentation'
+              : 'Search for parts, check inventory, and create orders'
             }
           </p>
         </div>
@@ -309,20 +373,20 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
         <div className="flex-1 overflow-y-auto p-6">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center">
-              <div className="w-16 h-16 bg-[#2E5C8A] bg-opacity-10 rounded-full flex items-center justify-center mb-4">
+              <div className="w-16 h-16 bg-[#2E5C8A] rounded-full flex items-center justify-center mb-4">
                 {mode === 'data-queries' ? (
-                  <Database className="w-8 h-8 text-[#2E5C8A]" />
+                  <Database className="w-10 h-10 text-white" />
                 ) : (
-                  <BookOpen className="w-8 h-8 text-[#2E5C8A]" />
+                  <Book className="w-10 h-10 text-white" />
                 )}
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {mode === 'data-queries' ? 'Ask about your manufacturing data' : 'Search equipment documentation'}
+                {mode === 'data-queries' ? 'Ask about your manufacturing data' : 'Parts Lookup Chatbot'}
               </h3>
               <p className="text-gray-600 text-center max-w-md mb-6">
                 {mode === 'data-queries'
                   ? 'Get instant insights from your production data, invoices, and purchase orders with AI-powered analysis.'
-                  : 'Search through all your equipment manuals and maintenance documentation to find the information you need.'
+                  : 'Search for parts, check inventory, and create orders using natural language.'
                 }
               </p>
               <div className="flex flex-wrap gap-2 justify-center max-w-2xl">
@@ -402,7 +466,7 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim()}
+              disabled={!input.trim() && !uploadedFile}
               className="px-6 py-3 bg-[#2E5C8A] text-white rounded-lg hover:bg-[#244A6E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Send className="w-4 h-4" />

@@ -1,4 +1,5 @@
-import { TrendingUp, TrendingDown, MessageSquare } from 'lucide-react';
+import { useState } from 'react';
+import { TrendingUp, TrendingDown, MessageSquare, FileDown, Filter, Save } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface DailySnapshotProps {
@@ -43,6 +44,28 @@ export default function DailySnapshot({ onOpenChat }: DailySnapshotProps) {
 
   const miniSparklineData = [2650, 2800, 2720, 2890, 2710, 2820, 2847];
 
+  const [savedReports, setSavedReports] = useState<string[]>([]);
+  const [productLineFilter, setProductLineFilter] = useState('all');
+  const [shiftFilter, setShiftFilter] = useState('all');
+
+  const handleExport = () => {
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + "Day,Actual,Target\n"
+      + productionData.map(e => `${e.day},${e.actual},${e.target}`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "daily_snapshot.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleSaveReport = () => {
+    const reportName = `Report - ${new Date().toLocaleString()}`;
+    setSavedReports([...savedReports, reportName]);
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Page Header */}
@@ -57,16 +80,58 @@ export default function DailySnapshot({ onOpenChat }: DailySnapshotProps) {
               <option>This Month</option>
               <option>Custom</option>
             </select>
+            <select value={productLineFilter} onChange={e => setProductLineFilter(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:border-[#2E5C8A] focus:outline-none focus:ring-2 focus:ring-[#2E5C8A] focus:border-transparent transition-all cursor-pointer">
+              <option value="all">All Product Lines</option>
+              <option value="a">Product Line A</option>
+              <option value="b">Product Line B</option>
+              <option value="c">Product Line C</option>
+            </select>
+            <select value={shiftFilter} onChange={e => setShiftFilter(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:border-[#2E5C8A] focus:outline-none focus:ring-2 focus:ring-[#2E5C8A] focus:border-transparent transition-all cursor-pointer">
+              <option value="all">All Shifts</option>
+              <option value="1">Shift 1</option>
+              <option value="2">Shift 2</option>
+              <option value="3">Shift 3</option>
+            </select>
           </div>
         </div>
-        <button
-          onClick={onOpenChat}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[#2E5C8A] text-white rounded-lg hover:bg-[#244A6E] transition-all hover:shadow-lg transform hover:-translate-y-0.5"
-        >
-          <MessageSquare className="w-4 h-4" />
-          Ask about today's performance →
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all hover:shadow-lg transform hover:-translate-y-0.5"
+          >
+            <FileDown className="w-4 h-4" />
+            Export to Excel
+          </button>
+          <button
+            onClick={handleSaveReport}
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all hover:shadow-lg transform hover:-translate-y-0.5"
+          >
+            <Save className="w-4 h-4" />
+            Save Report
+          </button>
+          <button
+            onClick={onOpenChat}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#2E5C8A] text-white rounded-lg hover:bg-[#244A6E] transition-all hover:shadow-lg transform hover:-translate-y-0.5"
+          >
+            <MessageSquare className="w-4 h-4" />
+            Ask about today's performance →
+          </button>
+        </div>
       </div>
+
+      {savedReports.length > 0 && (
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Saved Reports</h3>
+          <div className="space-y-2">
+            {savedReports.map((report, index) => (
+              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">{report}</span>
+                <button className="px-3 py-1 text-sm bg-blue-200 text-blue-800 rounded-lg hover:bg-blue-300">Load</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Top Row - Critical Metrics (4 KPI Cards) */}
       <div className="grid grid-cols-4 gap-6">
@@ -101,7 +166,7 @@ export default function DailySnapshot({ onOpenChat }: DailySnapshotProps) {
         <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-[#2E5C8A]/30 transform hover:-translate-y-1">
           <div className="text-sm text-gray-600 mb-2">OEE (Overall Equipment Effectiveness)</div>
           <div className="text-4xl font-medium text-yellow-600 mb-2">78.3%</div>
-          <div className="text-sm text-gray-900 font-medium mb-1">$127,450</div>
+          <div className="text-sm text-gray-900 font-medium mb-1">27,450</div>
           <div className="text-xs text-gray-600 mb-3">value today</div>
           <div className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full mb-2">
             Target: 80%+
