@@ -42,9 +42,11 @@ export default function App() {
           <div className="flex items-center justify-between">
             {/* Left: Logo */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#2E5C8A] to-[#3B6FA0] rounded-lg flex items-center justify-center shadow-md">
-                <Database className="w-6 h-6 text-white" />
-              </div>
+              <img
+                src="https://244666554.fs1.hubspotusercontent-na2.net/hubfs/244666554/413ecf10-8ec2-4899-929d-ca6e5e564e24.png"
+                alt="Scalable AI Logo"
+                className="w-10 h-10"
+              />
               <div>
                 <span className="text-xl font-semibold text-gray-900">Scalable AI</span>
                 <div className="text-xs text-gray-500">Manufacturing Intelligence</div>

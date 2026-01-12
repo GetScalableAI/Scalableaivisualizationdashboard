@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Send, BookOpen, Database, Star, Trash2, Download, PlusCircle, File, X, Book } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import PDFDragDrop from './PDFDragDrop';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import TypingIndicator from './TypingIndicator';
 
 type ChatMode = 'data-queries' | 'equipment-manuals';
 
@@ -23,6 +26,7 @@ export default function AIChatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
 
   const handleFileDrop = (file: File) => {
     setUploadedFile(file);
@@ -76,7 +80,7 @@ export default function AIChatbot() {
     ],
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim() && !uploadedFile) return;
 
     const userMessage: Message = {
@@ -85,11 +89,44 @@ export default function AIChatbot() {
       content: input,
     };
 
-    // Simulate AI response based on mode and input
-    let assistantMessage: Message;
+    setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
+    setInput('');
 
-    if (mode === 'data-queries') {
-      if (input.toLowerCase().includes('open pos') || input.toLowerCase().includes('purchase order')) {
+    let assistantMessage: Message;
+    setIsTyping(true);
+
+    if (mode === 'equipment-manuals') {
+      try {
+        const response = await fetch('https://joshuaross.app.n8n.cloud/webhook/124f389b-5c96-44f2-aa4b-0745281389b1', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ Query: currentInput }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Webhook response was not ok');
+        }
+
+        const data = await response.json();
+        assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data[0]?.output || 'Sorry, I could not find an answer.',
+        };
+      } catch (error) {
+        console.error('Webhook error:', error);
+        assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: 'Sorry, something went wrong while trying to get an answer.',
+        };
+      }
+    } else {
+      // Data queries mode (existing mock logic)
+      if (currentInput.toLowerCase().includes('open pos') || currentInput.toLowerCase().includes('purchase order')) {
         assistantMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -101,7 +138,7 @@ export default function AIChatbot() {
           },
           insight: 'ABC Supplier has the most open POs (34) totaling $142,500. 8 of these are past their expected delivery date.',
         };
-      } else if (input.toLowerCase().includes('oee') || input.toLowerCase().includes('equipment')) {
+      } else if (currentInput.toLowerCase().includes('oee') || currentInput.toLowerCase().includes('equipment')) {
         assistantMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -113,7 +150,7 @@ export default function AIChatbot() {
           },
           insight: 'OEE has improved by an average of 5.2% compared to last month, with the strongest performance in Week 4 (83%).',
         };
-      } else if (input.toLowerCase().includes('scrap')) {
+      } else if (currentInput.toLowerCase().includes('scrap')) {
         assistantMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -140,33 +177,10 @@ export default function AIChatbot() {
 Try asking something like "Show me open POs by supplier" or "Compare this week's OEE to last month".`,
         };
       }
-    } else {
-      // Equipment manuals mode
-      if (uploadedFile) {
-        assistantMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `I have received the file "${uploadedFile.name}". I am now ready to answer your questions about it.`,
-        };
-      } else {
-        assistantMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `To calibrate Machine #47, follow these steps:
-
-1. Power down the machine completely and wait 2 minutes
-2. Access the calibration menu using the control panel (Settings > Maintenance > Calibration)
-3. Follow the on-screen prompts to calibrate each axis
-4. Test the calibration with a sample part before resuming production
-
-**Important:** Only certified technicians should perform calibration procedures.`,
-          source: 'Machine #47 Manual, Page 23',
-        };
-      }
     }
-
-    setMessages([...messages, userMessage, assistantMessage]);
-    setInput('');
+    
+    setMessages(prev => [...prev, assistantMessage]);
+    setIsTyping(false);
   };
 
   const renderChart = (chart: Message['chart']) => {
@@ -252,8 +266,7 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setMode('data-queries')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${
-              mode === 'data-queries'
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${mode === 'data-queries'
                 ? 'bg-[#2E5C8A] text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
@@ -263,8 +276,7 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
           </button>
           <button
             onClick={() => setMode('equipment-manuals')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${
-              mode === 'equipment-manuals'
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${mode === 'equipment-manuals'
                 ? 'bg-[#2E5C8A] text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
@@ -359,7 +371,7 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
         {/* Chat Header */}
         <div className="border-b border-gray-200 p-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            {mode === 'data-queries' ? 'Manufacturing Data Assistant' : 'Parts Lookup Chatbot'}
+            {mode === 'data-queries' ? 'Manufacturing Data Assistant' : 'Scalable Parts Lookup Chatbot'}
           </h2>
           <p className="text-sm text-gray-600 mt-1">
             {mode === 'data-queries' 
@@ -408,16 +420,26 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
                   key={message.id}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-3xl ${message.role === 'user' ? 'ml-12' : 'mr-12'}`}>
-                    <div
-                      className={`rounded-lg px-4 py-3 ${
-                        message.role === 'user'
-                          ? 'bg-[#2E5C8A] text-white'
-                          : 'bg-gray-100 text-gray-900'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    </div>
+                                    <div className={`max-w-3xl ${message.role === 'user' ? 'ml-12' : 'mr-12'}`}>
+                                      {message.role === 'assistant' && (
+                                        <div className="flex items-center mb-2">
+                                          <img
+                                            src="https://244666554.fs1.hubspotusercontent-na2.net/hubfs/244666554/413ecf10-8ec2-4899-929d-ca6e5e564e24.png"
+                                            alt="Scalable AI Logo"
+                                            className="w-8 h-8 rounded-full mr-2"
+                                          />
+                                          <span className="font-semibold">Scalable AI</span>
+                                        </div>
+                                      )}
+                                      <div
+                                        className={`prose rounded-lg px-4 py-3 ${
+                                          message.role === 'user'
+                                            ? 'bg-[#2E5C8A] text-white prose-invert'
+                                            : 'bg-gray-100 text-gray-900'
+                                        }`}
+                                      >
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                                      </div>
                     {message.chart && renderChart(message.chart)}
                     {message.insight && (
                       <div className="mt-3 p-4 bg-blue-50 border-l-4 border-[#2E5C8A] rounded">
@@ -445,6 +467,15 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
                   </div>
                 </div>
               ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="max-w-3xl mr-12">
+                    <div className="bg-gray-100 rounded-lg px-4 py-3">
+                      <TypingIndicator />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
