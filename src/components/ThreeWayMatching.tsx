@@ -514,9 +514,9 @@ export default function ThreeWayMatching({ onOpenChat }: ThreeWayMatchingProps) 
                   </td>
                   <td className="px-6 py-4 text-right">
                     {record.variance > 0 ? (
-                      <div>
+                      <div className="flex items-center justify-end gap-2">
                         <span className="font-medium text-red-600">${record.variance.toLocaleString()}</span>
-                        <span className="text-xs text-red-500 ml-1">({record.variancePercent.toFixed(1)}%)</span>
+                        <span className="text-xs text-red-500 bg-red-50 px-1.5 py-0.5 rounded">({record.variancePercent.toFixed(1)}%)</span>
                       </div>
                     ) : (
                       <span className="text-green-600 font-medium">$0</span>

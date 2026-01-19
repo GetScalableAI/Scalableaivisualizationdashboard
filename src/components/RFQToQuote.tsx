@@ -30,6 +30,8 @@ interface RFQToQuoteProps {
 
 type RFQStatus = 'draft' | 'sent' | 'processing' | 'quoted' | 'accepted' | 'rejected' | 'expired';
 
+type TeamType = 'Engineering' | 'Procurement' | 'Finance' | 'Operations' | 'Quality' | 'Vendor';
+
 interface RFQ {
   id: string;
   title: string;
@@ -38,6 +40,7 @@ interface RFQ {
   value: number;
   items: number;
   status: RFQStatus;
+  assignedTo: TeamType;
   createdDate: string;
   dueDate: string;
   responseDate?: string;
@@ -65,6 +68,7 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
       value: 185000,
       items: 24,
       status: 'processing',
+      assignedTo: 'Engineering',
       createdDate: '2024-01-15',
       dueDate: '2024-01-25',
       processingProgress: 65,
@@ -78,6 +82,7 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
       value: 45200,
       items: 150,
       status: 'quoted',
+      assignedTo: 'Finance',
       createdDate: '2024-01-14',
       dueDate: '2024-01-22',
       responseDate: '2024-01-18',
@@ -92,6 +97,7 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
       value: 128500,
       items: 35,
       status: 'processing',
+      assignedTo: 'Vendor',
       createdDate: '2024-01-13',
       dueDate: '2024-01-23',
       processingProgress: 40,
@@ -105,6 +111,7 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
       value: 22800,
       items: 200,
       status: 'accepted',
+      assignedTo: 'Procurement',
       createdDate: '2024-01-12',
       dueDate: '2024-01-20',
       responseDate: '2024-01-16',
@@ -119,6 +126,7 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
       value: 312000,
       items: 45,
       status: 'sent',
+      assignedTo: 'Vendor',
       createdDate: '2024-01-11',
       dueDate: '2024-01-28',
       priority: 'high',
@@ -131,6 +139,7 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
       value: 78900,
       items: 18,
       status: 'processing',
+      assignedTo: 'Engineering',
       createdDate: '2024-01-10',
       dueDate: '2024-01-24',
       processingProgress: 85,
@@ -144,6 +153,7 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
       value: 56300,
       items: 500,
       status: 'quoted',
+      assignedTo: 'Finance',
       createdDate: '2024-01-09',
       dueDate: '2024-01-19',
       responseDate: '2024-01-17',
@@ -158,6 +168,7 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
       value: 8500,
       items: 1000,
       status: 'rejected',
+      assignedTo: 'Operations',
       createdDate: '2024-01-08',
       dueDate: '2024-01-16',
       responseDate: '2024-01-14',
@@ -172,6 +183,7 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
       value: 15200,
       items: 80,
       status: 'expired',
+      assignedTo: 'Operations',
       createdDate: '2024-01-05',
       dueDate: '2024-01-12',
       priority: 'low',
@@ -184,6 +196,7 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
       value: 245000,
       items: 12,
       status: 'draft',
+      assignedTo: 'Engineering',
       createdDate: '2024-01-18',
       dueDate: '2024-02-01',
       priority: 'high',
@@ -597,10 +610,15 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
-                        <StatusIcon className={`w-3.5 h-3.5 ${rfq.status === 'processing' ? 'animate-spin' : ''}`} />
-                        {statusConfig.label}
-                      </span>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
+                          <StatusIcon className={`w-3.5 h-3.5 ${rfq.status === 'processing' ? 'animate-spin' : ''}`} />
+                          {statusConfig.label}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          with <span className="font-medium text-gray-700">{rfq.assignedTo}</span>
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <motion.button
@@ -665,8 +683,8 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
               </div>
 
               <div className="space-y-6">
-                {/* Vendor & Category */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Vendor, Category & Assigned To */}
+                <div className="grid grid-cols-3 gap-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
                       <Building2 className="w-3 h-3" />
@@ -677,6 +695,10 @@ export default function RFQToQuote({ onOpenChat }: RFQToQuoteProps) {
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="text-xs text-gray-500 mb-1">Category</div>
                     <div className="font-medium text-gray-900">{selectedRFQ.category}</div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <div className="text-xs text-blue-600 mb-1">Currently With</div>
+                    <div className="font-medium text-blue-700">{selectedRFQ.assignedTo}</div>
                   </div>
                 </div>
 
