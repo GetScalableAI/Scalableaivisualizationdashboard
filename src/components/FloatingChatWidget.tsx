@@ -1,10 +1,25 @@
 import { useState } from 'react';
-import { X, Send, MessageSquare, Maximize2, Minimize2 } from 'lucide-react';
+import { X, Send, MessageSquare, Maximize2, Minimize2, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FloatingChatWidgetProps {
   onClose: () => void;
   onOpenFullChat: () => void;
 }
+
+// Blue theme colors matching other panels
+const colors = {
+  panelBg: '#1a365d',
+  headerBg: '#2c5282',
+  contentBg: '#1e4976',
+  cardBg: '#234e7a',
+  accent: '#3b82f6',
+  text: '#ffffff',
+  textMuted: 'rgba(255, 255, 255, 0.7)',
+  textDim: 'rgba(255, 255, 255, 0.5)',
+  border: 'rgba(255, 255, 255, 0.1)',
+  inputBg: 'rgba(255, 255, 255, 0.1)',
+};
 
 export default function FloatingChatWidget({ onClose, onOpenFullChat }: FloatingChatWidgetProps) {
   const [input, setInput] = useState('');
@@ -18,8 +33,8 @@ export default function FloatingChatWidget({ onClose, onOpenFullChat }: Floating
     const assistantMessage = {
       role: 'assistant' as const,
       content: `I can help you analyze that data. ${
-        input.toLowerCase().includes('oee') 
-          ? 'Your OEE is currently at 78.3%, which is 1.7% below the 80% target. The main factors are: reduced availability due to unplanned downtime on CNC-03 (1.2 hrs) and performance losses during shift changeover.' 
+        input.toLowerCase().includes('oee')
+          ? 'Your OEE is currently at 78.3%, which is 1.7% below the 80% target. The main factors are: reduced availability due to unplanned downtime on CNC-03 (1.2 hrs) and performance losses during shift changeover.'
           : input.toLowerCase().includes('scrap')
           ? 'Your scrap rate today is 2.1% ($4,230), primarily driven by Product Line B with dimensional issues. This is still below the 2.5% target but up 0.8% from last week.'
           : input.toLowerCase().includes('delayed') || input.toLowerCase().includes('po')
@@ -34,150 +49,365 @@ export default function FloatingChatWidget({ onClose, onOpenFullChat }: Floating
 
   if (isMinimized) {
     return (
-      <button
+      <motion.button
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-6 right-6 bg-[#2E5C8A] text-white px-4 py-3 rounded-full shadow-xl hover:bg-[#244A6E] transition-all hover:scale-105 flex items-center gap-2 z-50 animate-scaleIn"
+        style={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          backgroundColor: colors.headerBg,
+          color: colors.text,
+          padding: '12px 20px',
+          borderRadius: 50,
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          zIndex: 50,
+        }}
       >
-        <MessageSquare className="w-5 h-5" />
-        <span className="font-medium">AI Assistant</span>
+        <MessageSquare style={{ width: 20, height: 20 }} />
+        <span style={{ fontWeight: 500 }}>AI Assistant</span>
         {messages.length > 0 && (
-          <span className="bg-white text-[#2E5C8A] px-2 py-0.5 rounded-full text-xs font-semibold">
+          <span
+            style={{
+              backgroundColor: colors.accent,
+              color: colors.text,
+              padding: '2px 8px',
+              borderRadius: 50,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
             {messages.filter(m => m.role === 'assistant').length}
           </span>
         )}
-      </button>
+      </motion.button>
     );
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-[420px] bg-white rounded-xl shadow-2xl flex flex-col z-50 border border-gray-200 max-h-[650px] animate-slideUp">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-[#2E5C8A] to-[#3B6FA0] text-white rounded-t-xl">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-            <MessageSquare className="w-5 h-5" />
+    <AnimatePresence mode="wait">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
+        style={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          width: 420,
+          backgroundColor: colors.panelBg,
+          borderRadius: 20,
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          flexDirection: 'column',
+          zIndex: 50,
+          maxHeight: 600,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            backgroundColor: colors.headerBg,
+            borderBottom: `1px solid ${colors.border}`,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                backgroundColor: colors.accent,
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Sparkles style={{ width: 20, height: 20, color: colors.text }} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, color: colors.text, fontSize: 16 }}>AI Assistant</div>
+              <div style={{ fontSize: 12, color: colors.textMuted }}>Ask me anything</div>
+            </div>
           </div>
-          <div>
-            <span className="font-semibold">AI Assistant</span>
-            <div className="text-xs text-white/80">Ask me anything</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button
+              onClick={() => setIsMinimized(true)}
+              title="Minimize"
+              style={{
+                padding: 8,
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Minimize2 style={{ width: 18, height: 18, color: colors.textMuted }} />
+            </button>
+            <button
+              onClick={onOpenFullChat}
+              title="Open full chat"
+              style={{
+                padding: 8,
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Maximize2 style={{ width: 18, height: 18, color: colors.textMuted }} />
+            </button>
+            <button
+              onClick={onClose}
+              title="Close"
+              style={{
+                padding: 8,
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <X style={{ width: 18, height: 18, color: colors.textMuted }} />
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setIsMinimized(true)}
-            className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            title="Minimize"
-          >
-            <Minimize2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={onOpenFullChat}
-            className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            title="Open full chat"
-          >
-            <Maximize2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            title="Close"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[350px] bg-gradient-to-b from-gray-50 to-white">
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center px-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-[#2E5C8A] to-[#3B6FA0] rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-              <MessageSquare className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="font-semibold text-gray-900 mb-2">How can I help you?</h3>
-            <p className="text-sm text-gray-600 mb-4">Ask me about your manufacturing data, production metrics, or operations.</p>
-            <div className="space-y-2 w-full">
-              <button
-                onClick={() => setInput('Why is OEE below target today?')}
-                className="w-full px-4 py-3 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 hover:border-[#2E5C8A] transition-all text-left shadow-sm hover:shadow"
-              >
-                <div className="font-medium">Why is OEE below target today?</div>
-                <div className="text-xs text-gray-500 mt-0.5">Analyze equipment effectiveness</div>
-              </button>
-              <button
-                onClick={() => setInput('Show me delayed POs')}
-                className="w-full px-4 py-3 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 hover:border-[#2E5C8A] transition-all text-left shadow-sm hover:shadow"
-              >
-                <div className="font-medium">Show me delayed POs</div>
-                <div className="text-xs text-gray-500 mt-0.5">View purchase order status</div>
-              </button>
-              <button
-                onClick={() => setInput('What caused the scrap rate increase?')}
-                className="w-full px-4 py-3 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 hover:border-[#2E5C8A] transition-all text-left shadow-sm hover:shadow"
-              >
-                <div className="font-medium">What caused the scrap rate increase?</div>
-                <div className="text-xs text-gray-500 mt-0.5">Quality metrics analysis</div>
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {messages.map((message, index) => (
+        {/* Messages Area */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: 16,
+            backgroundColor: colors.contentBg,
+            minHeight: 350,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}
+        >
+          {messages.length === 0 ? (
+            <div
+              style={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                padding: '0 16px',
+              }}
+            >
               <div
-                key={index}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`}
+                style={{
+                  width: 64,
+                  height: 64,
+                  backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                  borderRadius: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                }}
               >
-                <div
-                  className={`max-w-[85%] rounded-xl px-4 py-2.5 text-sm shadow-sm ${
-                    message.role === 'user'
-                      ? 'bg-gradient-to-r from-[#2E5C8A] to-[#3B6FA0] text-white'
-                      : 'bg-white text-gray-900 border border-gray-200'
-                  }`}
-                >
-                  {message.content}
-                </div>
+                <MessageSquare style={{ width: 32, height: 32, color: colors.accent }} />
               </div>
-            ))}
-            <div className="text-center pt-2">
-              <button
-                onClick={onOpenFullChat}
-                className="text-xs text-[#2E5C8A] hover:underline font-medium inline-flex items-center gap-1"
-              >
-                <Maximize2 className="w-3 h-3" />
-                Open full chat for charts and detailed analysis
-              </button>
+              <h3 style={{ fontWeight: 600, color: colors.text, marginBottom: 8, fontSize: 18 }}>
+                How can I help you?
+              </h3>
+              <p style={{ fontSize: 14, color: colors.textMuted, marginBottom: 20 }}>
+                Ask me about your manufacturing data, production metrics, or operations.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+                <button
+                  onClick={() => setInput('Why is OEE below target today?')}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: colors.cardBg,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                    fontSize: 14,
+                    borderRadius: 12,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ fontWeight: 500 }}>Why is OEE below target today?</div>
+                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
+                    Analyze equipment effectiveness
+                  </div>
+                </button>
+                <button
+                  onClick={() => setInput('Show me delayed POs')}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: colors.cardBg,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                    fontSize: 14,
+                    borderRadius: 12,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ fontWeight: 500 }}>Show me delayed POs</div>
+                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
+                    View purchase order status
+                  </div>
+                </button>
+                <button
+                  onClick={() => setInput('What caused the scrap rate increase?')}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: colors.cardBg,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                    fontSize: 14,
+                    borderRadius: 12,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ fontWeight: 500 }}>What caused the scrap rate increase?</div>
+                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
+                    Quality metrics analysis
+                  </div>
+                </button>
+              </div>
             </div>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                  }}
+                >
+                  <div
+                    style={{
+                      maxWidth: '85%',
+                      borderRadius: 16,
+                      padding: '10px 16px',
+                      fontSize: 14,
+                      backgroundColor: message.role === 'user' ? colors.accent : colors.cardBg,
+                      color: colors.text,
+                      borderTopRightRadius: message.role === 'user' ? 4 : 16,
+                      borderTopLeftRadius: message.role === 'user' ? 16 : 4,
+                    }}
+                  >
+                    {message.content}
+                  </div>
+                </div>
+              ))}
+              <div style={{ textAlign: 'center', paddingTop: 8 }}>
+                <button
+                  onClick={onOpenFullChat}
+                  style={{
+                    fontSize: 12,
+                    color: colors.accent,
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <Maximize2 style={{ width: 12, height: 12 }} />
+                  Open full chat for charts and detailed analysis
+                </button>
+              </div>
+            </>
+          )}
+        </div>
 
-      {/* Input Area */}
-      <div className="border-t border-gray-200 p-4 bg-white rounded-b-xl">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Ask a question..."
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E5C8A] focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim()}
-            className="p-2.5 bg-gradient-to-r from-[#2E5C8A] to-[#3B6FA0] text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex items-center gap-1 mt-2">
-          <div className="flex-1 flex items-center gap-1 text-xs text-gray-500">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-            <span>AI ready</span>
+        {/* Input Area */}
+        <div
+          style={{
+            borderTop: `1px solid ${colors.border}`,
+            padding: 16,
+            backgroundColor: colors.headerBg,
+          }}
+        >
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Ask a question..."
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                backgroundColor: colors.inputBg,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 12,
+                color: colors.text,
+                fontSize: 14,
+                outline: 'none',
+              }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim()}
+              style={{
+                padding: '12px 16px',
+                backgroundColor: colors.accent,
+                color: colors.text,
+                border: 'none',
+                borderRadius: 12,
+                cursor: input.trim() ? 'pointer' : 'not-allowed',
+                opacity: input.trim() ? 1 : 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Send style={{ width: 18, height: 18 }} />
+            </button>
           </div>
-          <span className="text-xs text-gray-400">Press Enter to send</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: colors.textMuted }}>
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  backgroundColor: '#10b981',
+                  borderRadius: '50%',
+                }}
+              />
+              <span>AI ready</span>
+            </div>
+            <span style={{ fontSize: 11, color: colors.textDim }}>Press Enter to send</span>
+          </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
