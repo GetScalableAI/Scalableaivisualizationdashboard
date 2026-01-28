@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash([ -d node_modules ])",
+      "Bash(npm run dev)",
+      "Bash(dir \"C:\\Users\\Josh\\Scalableaivisualizationdashboard\\src\" /s /b)",
+      "Bash(npm install react-grid-layout framer-motion @dnd-kit/sortable @dnd-kit/core react-intersection-observer date-fns)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3000)",
+      "Bash(findstr LISTENING)",
+      "Bash(npm install --save-dev @types/react-grid-layout)",
+      "Bash(npm install --save-dev @types/react-grid-layout --legacy-peer-deps)",
+      "Bash(taskkill //F //PID 38640)",
+      "Bash(cat node_modules/react-grid-layout/package.json)",
+      "Bash(npx tsc:*)",
+      "Bash(npx --package typescript tsc:*)",
+      "Bash(npm run build)",
+      "Bash(npm install)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout:*)",
+      "Bash(git reset:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nUI improvements: solid nav bar, remove floating chat, add team tracking\n\n- Nav bar: Changed to solid white background with updated text colors\n- Removed floating AI Assistant chat widget and button\n- 3 Way Matching: Improved variance display with better spacing\n- RFQ to Quote: Added team assignment tracking \\(Engineering, Procurement,\n  Finance, Operations, Quality, Vendor\\) to show workflow ownership\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "WebFetch(domain:clerk.com)",
+      "Bash(npm install:*)",
+      "Bash(git commit:*)",
+      "Bash(grep:*)",
+      "Bash(git checkout:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
