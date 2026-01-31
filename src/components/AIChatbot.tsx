@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { Send, BookOpen, Database, Star, Trash2, Download, PlusCircle, File, X, Book } from 'lucide-react';
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import PDFDragDrop from './PDFDragDrop';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import TypingIndicator from './TypingIndicator';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type ChatMode = 'data-queries' | 'equipment-manuals';
 
@@ -178,7 +187,7 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
         };
       }
     }
-    
+
     setMessages(prev => [...prev, assistantMessage]);
     setIsTyping(false);
   };
@@ -197,7 +206,7 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey={Object.keys(chart.data[0])[0]} angle={-45} textAnchor="end" height={100} />
               <YAxis />
-              <Tooltip />
+              <RechartsTooltip />
               <Legend />
               {Object.keys(chart.data[0]).filter(key => key !== Object.keys(chart.data[0])[0]).map((key, index) => (
                 <Bar key={key} dataKey={key} fill={COLORS[index % COLORS.length]} name={key.charAt(0).toUpperCase() + key.slice(1)} />
@@ -209,15 +218,15 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey={Object.keys(chart.data[0])[0]} />
               <YAxis />
-              <Tooltip />
+              <RechartsTooltip />
               <Legend />
               {Object.keys(chart.data[0]).filter(key => key !== Object.keys(chart.data[0])[0]).map((key, index) => (
-                <Line 
-                  key={key} 
-                  type="monotone" 
-                  dataKey={key} 
-                  stroke={COLORS[index % COLORS.length]} 
-                  strokeWidth={2} 
+                <Line
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  stroke={COLORS[index % COLORS.length]}
+                  strokeWidth={2}
                   name={key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
                 />
               ))}
@@ -225,26 +234,31 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
           )}
         </ResponsiveContainer>
         <div className="flex items-center gap-2 mt-4">
-          <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 flex items-center gap-1">
+          <Button variant="outline" size="sm" className="flex items-center gap-1">
             <Download className="w-3 h-3" />
             Export as PNG
-          </button>
-          <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 flex items-center gap-1">
+          </Button>
+          <Button variant="outline" size="sm" className="flex items-center gap-1">
             <PlusCircle className="w-3 h-3" />
             Add to Dashboard
-          </button>
-          <select className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
-            <option>Bar Chart</option>
-            <option>Line Chart</option>
-            <option>Pie Chart</option>
-            <option>Table View</option>
-          </select>
+          </Button>
+          <Select defaultValue="bar">
+            <SelectTrigger className="w-[130px] h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="bar">Bar Chart</SelectItem>
+              <SelectItem value="line">Line Chart</SelectItem>
+              <SelectItem value="pie">Pie Chart</SelectItem>
+              <SelectItem value="table">Table View</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     );
   };
 
-  const suggestedQueries = mode === 'data-queries' 
+  const suggestedQueries = mode === 'data-queries'
     ? [
         'Show open POs by supplier',
         'Compare this week\'s OEE to last month',
@@ -259,266 +273,298 @@ Try asking something like "Show me open POs by supplier" or "Compare this week's
       ];
 
   return (
-    <div className="flex gap-6 h-[calc(100vh-140px)]">
-      {/* Left Sidebar */}
-      <div className="w-80 bg-white rounded-lg shadow-sm p-4 flex flex-col">
-        {/* Mode Toggle */}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setMode('data-queries')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${mode === 'data-queries'
-                ? 'bg-[#2E5C8A] text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <Database className="w-4 h-4" />
-            <span className="text-sm font-medium">Data Queries</span>
-          </button>
-          <button
-            onClick={() => setMode('equipment-manuals')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${mode === 'equipment-manuals'
-                ? 'bg-[#2E5C8A] text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <BookOpen className="w-4 h-4" />
-            <span className="text-sm font-medium">Parts Lookup</span>
-          </button>
-        </div>
-
-        {/* Add Manuals Dropzone */}
-        {mode === 'equipment-manuals' && (
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Add Manuals</h3>
-            {!uploadedFile ? (
-              <PDFDragDrop onFileDrop={handleFileDrop} />
-            ) : (
-              <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <File className="w-5 h-5 text-gray-500" />
-                  <span className="text-sm text-gray-700 truncate">{uploadedFile.name}</span>
-                </div>
-                <button onClick={handleRemoveFile} className="p-1 hover:bg-gray-200 rounded-full">
-                  <X className="w-4 h-4 text-gray-600" />
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Manuals List */}
-        {mode === 'equipment-manuals' && (
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Available Manuals</h3>
-            <div className="space-y-2">
-              {manuals.map((manual, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <File className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-700 truncate">{manual}</span>
-                  </div>
-                  <button className="p-1 hover:bg-gray-200 rounded-full">
-                    <Trash2 className="w-3 h-3 text-gray-600" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Recent Conversations */}
-        <div className="flex-1 overflow-y-auto">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Recent Conversations</h3>
-          <div className="space-y-2">
-            {conversationHistory.map((conv) => (
-              <button
-                key={conv.id}
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+    <TooltipProvider>
+      <div className="flex gap-6 h-[calc(100vh-140px)]">
+        {/* Left Sidebar */}
+        <Card className="w-80 flex flex-col">
+          <CardContent className="flex-1 flex flex-col p-4">
+            {/* Mode Toggle */}
+            <div className="flex gap-2 mb-6">
+              <Button
+                onClick={() => setMode('data-queries')}
+                variant={mode === 'data-queries' ? 'default' : 'outline'}
+                className={mode === 'data-queries' ? 'bg-[#2E5C8A] hover:bg-[#244A6E] text-white flex-1' : 'flex-1'}
               >
-                <div className="text-sm text-gray-900">{conv.title}</div>
-                <div className="text-xs text-gray-500 mt-1">{conv.timestamp}</div>
-              </button>
-            ))}
-          </div>
-
-          {/* Saved Queries */}
-          <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Saved Queries</h3>
-            <div className="space-y-2">
-              {savedQueries.map((query, index) => (
-                <button
-                  key={index}
-                  onClick={() => setInput(query)}
-                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-between group"
-                >
-                  <span className="text-sm text-gray-900">{query}</span>
-                  <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                </button>
-              ))}
+                <Database className="w-4 h-4 mr-2" />
+                <span className="text-sm font-medium">Data Queries</span>
+              </Button>
+              <Button
+                onClick={() => setMode('equipment-manuals')}
+                variant={mode === 'equipment-manuals' ? 'default' : 'outline'}
+                className={mode === 'equipment-manuals' ? 'bg-[#2E5C8A] hover:bg-[#244A6E] text-white flex-1' : 'flex-1'}
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                <span className="text-sm font-medium">Parts Lookup</span>
+              </Button>
             </div>
-          </div>
-        </div>
 
-        {/* Clear Chat */}
-        <button className="mt-4 w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm flex items-center justify-center gap-2">
-          <Trash2 className="w-4 h-4" />
-          Clear Chat
-        </button>
-      </div>
-
-      {/* Main Chat Area */}
-      <div className="flex-1 bg-white rounded-lg shadow-sm flex flex-col">
-        {/* Chat Header */}
-        <div className="border-b border-gray-200 p-4">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {mode === 'data-queries' ? 'Manufacturing Data Assistant' : 'Scalable Parts Lookup Chatbot'}
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            {mode === 'data-queries' 
-              ? 'Ask questions about your production, invoices, and purchase orders'
-              : 'Search for parts, check inventory, and create orders'
-            }
-          </p>
-        </div>
-
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center">
-              <div className="w-16 h-16 bg-[#2E5C8A] rounded-full flex items-center justify-center mb-4">
-                {mode === 'data-queries' ? (
-                  <Database className="w-10 h-10 text-white" />
+            {/* Add Manuals Dropzone */}
+            {mode === 'equipment-manuals' && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Add Manuals</h3>
+                {!uploadedFile ? (
+                  <PDFDragDrop onFileDrop={handleFileDrop} />
                 ) : (
-                  <Book className="w-10 h-10 text-white" />
+                  <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <File className="w-5 h-5 text-gray-500" />
+                      <span className="text-sm text-gray-700 truncate">{uploadedFile.name}</span>
+                    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button onClick={handleRemoveFile} variant="ghost" size="icon" className="h-6 w-6">
+                          <X className="w-4 h-4 text-gray-600" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Remove file</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 )}
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {mode === 'data-queries' ? 'Ask about your manufacturing data' : 'Parts Lookup Chatbot'}
-              </h3>
-              <p className="text-gray-600 text-center max-w-md mb-6">
-                {mode === 'data-queries'
-                  ? 'Get instant insights from your production data, invoices, and purchase orders with AI-powered analysis.'
-                  : 'Search for parts, check inventory, and create orders using natural language.'
-                }
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center max-w-2xl">
-                {suggestedQueries.map((query, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setInput(query)}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors text-sm"
+            )}
+
+            {/* Manuals List */}
+            {mode === 'equipment-manuals' && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Available Manuals</h3>
+                <div className="space-y-2">
+                  {manuals.map((manual, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <File className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-700 truncate">{manual}</span>
+                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <Trash2 className="w-3 h-3 text-gray-600" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete manual</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Separator className="mb-4" />
+
+            {/* Recent Conversations */}
+            <ScrollArea className="flex-1">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Recent Conversations</h3>
+              <div className="space-y-2">
+                {conversationHistory.map((conv) => (
+                  <Button
+                    key={conv.id}
+                    variant="ghost"
+                    className="w-full justify-start"
                   >
-                    {query}
-                  </button>
+                    <div className="text-left">
+                      <div className="text-sm text-gray-900">{conv.title}</div>
+                      <div className="text-xs text-gray-500 mt-1">{conv.timestamp}</div>
+                    </div>
+                  </Button>
                 ))}
               </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                                    <div className={`max-w-3xl ${message.role === 'user' ? 'ml-12' : 'mr-12'}`}>
-                                      {message.role === 'assistant' && (
-                                        <div className="flex items-center mb-2">
-                                          <img
-                                            src="https://244666554.fs1.hubspotusercontent-na2.net/hubfs/244666554/413ecf10-8ec2-4899-929d-ca6e5e564e24.png"
-                                            alt="Scalable AI Logo"
-                                            className="w-8 h-8 rounded-full mr-2"
-                                          />
-                                          <span className="font-semibold">Scalable AI</span>
-                                        </div>
-                                      )}
-                                      <div
-                                        className={`prose rounded-lg px-4 py-3 ${
-                                          message.role === 'user'
-                                            ? 'bg-[#2E5C8A] text-white prose-invert'
-                                            : 'bg-gray-100 text-gray-900'
-                                        }`}
-                                      >
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-                                      </div>
-                    {message.chart && renderChart(message.chart)}
-                    {message.insight && (
-                      <div className="mt-3 p-4 bg-blue-50 border-l-4 border-[#2E5C8A] rounded">
-                        <div className="flex items-start gap-2">
-                          <span className="text-sm font-medium text-[#2E5C8A]">💡 Insight:</span>
-                          <p className="text-sm text-gray-700">{message.insight}</p>
-                        </div>
-                      </div>
-                    )}
-                    {message.source && (
-                      <div className="mt-2 text-xs text-gray-600">
-                        <button className="hover:underline">📄 Source: {message.source}</button>
-                      </div>
-                    )}
-                    {message.role === 'assistant' && message.chart && (
-                      <div className="flex gap-2 mt-3">
-                        <button className="px-3 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50">
-                          View PO Details
-                        </button>
-                        <button className="px-3 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50">
-                          Ask Follow-up
-                        </button>
-                      </div>
-                    )}
-                  </div>
+
+              <Separator className="my-4" />
+
+              {/* Saved Queries */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Saved Queries</h3>
+                <div className="space-y-2">
+                  {savedQueries.map((query, index) => (
+                    <Button
+                      key={index}
+                      onClick={() => setInput(query)}
+                      variant="ghost"
+                      className="w-full justify-between"
+                    >
+                      <span className="text-sm text-gray-900">{query}</span>
+                      <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                    </Button>
+                  ))}
                 </div>
-              ))}
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="max-w-3xl mr-12">
-                    <div className="bg-gray-100 rounded-lg px-4 py-3">
-                      <TypingIndicator />
+              </div>
+            </ScrollArea>
+
+            <Separator className="my-4" />
+
+            {/* Clear Chat */}
+            <Button variant="outline" className="w-full">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Clear Chat
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Main Chat Area */}
+        <Card className="flex-1 flex flex-col">
+          {/* Chat Header */}
+          <CardHeader className="border-b">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {mode === 'data-queries' ? 'Manufacturing Data Assistant' : 'Scalable Parts Lookup Chatbot'}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              {mode === 'data-queries'
+                ? 'Ask questions about your production, invoices, and purchase orders'
+                : 'Search for parts, check inventory, and create orders'
+              }
+            </p>
+          </CardHeader>
+
+          {/* Messages Area */}
+          <ScrollArea className="flex-1 p-6">
+            {messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-[#2E5C8A] rounded-full flex items-center justify-center mb-4">
+                  {mode === 'data-queries' ? (
+                    <Database className="w-10 h-10 text-white" />
+                  ) : (
+                    <Book className="w-10 h-10 text-white" />
+                  )}
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {mode === 'data-queries' ? 'Ask about your manufacturing data' : 'Parts Lookup Chatbot'}
+                </h3>
+                <p className="text-gray-600 text-center max-w-md mb-6">
+                  {mode === 'data-queries'
+                    ? 'Get instant insights from your production data, invoices, and purchase orders with AI-powered analysis.'
+                    : 'Search for parts, check inventory, and create orders using natural language.'
+                  }
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center max-w-2xl">
+                  {suggestedQueries.map((query, index) => (
+                    <Button
+                      key={index}
+                      onClick={() => setInput(query)}
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                    >
+                      {query}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`max-w-3xl ${message.role === 'user' ? 'ml-12' : 'mr-12'}`}>
+                      {message.role === 'assistant' && (
+                        <div className="flex items-center mb-2">
+                          <Avatar className="h-8 w-8 mr-2">
+                            <AvatarImage
+                              src="https://244666554.fs1.hubspotusercontent-na2.net/hubfs/244666554/413ecf10-8ec2-4899-929d-ca6e5e564e24.png"
+                              alt="Scalable AI Logo"
+                            />
+                            <AvatarFallback>AI</AvatarFallback>
+                          </Avatar>
+                          <span className="font-semibold">Scalable AI</span>
+                        </div>
+                      )}
+                      <div
+                        className={`prose rounded-lg px-4 py-3 ${
+                          message.role === 'user'
+                            ? 'bg-[#2E5C8A] text-white prose-invert'
+                            : 'bg-gray-100 text-gray-900'
+                        }`}
+                      >
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                      </div>
+                      {message.chart && renderChart(message.chart)}
+                      {message.insight && (
+                        <div className="mt-3 p-4 bg-blue-50 border-l-4 border-[#2E5C8A] rounded">
+                          <div className="flex items-start gap-2">
+                            <span className="text-sm font-medium text-[#2E5C8A]">💡 Insight:</span>
+                            <p className="text-sm text-gray-700">{message.insight}</p>
+                          </div>
+                        </div>
+                      )}
+                      {message.source && (
+                        <div className="mt-2">
+                          <Button variant="link" size="sm" className="text-xs p-0 h-auto">
+                            📄 Source: <Badge variant="outline" className="ml-1">{message.source}</Badge>
+                          </Button>
+                        </div>
+                      )}
+                      {message.role === 'assistant' && message.chart && (
+                        <div className="flex gap-2 mt-3">
+                          <Button variant="outline" size="sm">
+                            View PO Details
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            Ask Follow-up
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+                ))}
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="max-w-3xl mr-12">
+                      <div className="bg-gray-100 rounded-lg px-4 py-3">
+                        <TypingIndicator />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </ScrollArea>
 
-        {/* Input Area */}
-        <div className="border-t border-gray-200 p-4">
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder={
-                mode === 'data-queries'
-                  ? 'Ask about your manufacturing data...'
-                  : 'Ask about equipment or processes...'
-              }
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2E5C8A] focus:border-transparent"
-            />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() && !uploadedFile}
-              className="px-6 py-3 bg-[#2E5C8A] text-white rounded-lg hover:bg-[#244A6E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <Send className="w-4 h-4" />
-              <span>Send</span>
-            </button>
-          </div>
-          {mode === 'data-queries' && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {suggestedQueries.slice(0, 4).map((query, index) => (
-                <button
-                  key={index}
-                  onClick={() => setInput(query)}
-                  className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full hover:bg-gray-200"
-                >
-                  {query}
-                </button>
-              ))}
+          {/* Input Area */}
+          <CardContent className="border-t p-4">
+            <div className="flex gap-3">
+              <Input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                placeholder={
+                  mode === 'data-queries'
+                    ? 'Ask about your manufacturing data...'
+                    : 'Ask about equipment or processes...'
+                }
+                className="h-11"
+              />
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() && !uploadedFile}
+                className="bg-[#2E5C8A] hover:bg-[#244A6E]"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                <span>Send</span>
+              </Button>
             </div>
-          )}
-        </div>
+            {mode === 'data-queries' && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {suggestedQueries.slice(0, 4).map((query, index) => (
+                  <Button
+                    key={index}
+                    onClick={() => setInput(query)}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                  >
+                    {query}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

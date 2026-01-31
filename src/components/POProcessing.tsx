@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { ShoppingCart, Clock, TrendingUp, Eye, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-import { BarChart, Bar, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface POProcessingProps {
   onOpenChat: () => void;
@@ -58,27 +68,52 @@ export default function POProcessing({ onOpenChat }: POProcessingProps) {
     { month: 'Jan', value: 9800 },
   ];
 
-  const filteredPOs = statusFilter === 'all' 
-    ? purchaseOrders 
+  const filteredPOs = statusFilter === 'all'
+    ? purchaseOrders
     : purchaseOrders.filter(po => po.status === statusFilter);
 
   const getStatusBadge = (status: PurchaseOrder['status']) => {
     const badges = {
-      'pending-approval': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending Approval', icon: Clock },
-      'approved': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Approved', icon: CheckCircle },
-      'ordered': { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Ordered', icon: ShoppingCart },
-      'delivered': { bg: 'bg-green-100', text: 'text-green-800', label: 'Delivered', icon: CheckCircle },
-      'delayed': { bg: 'bg-red-100', text: 'text-red-800', label: 'Delayed', icon: AlertTriangle },
+      'pending-approval': {
+        variant: 'secondary' as const,
+        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        label: 'Pending Approval',
+        icon: Clock
+      },
+      'approved': {
+        variant: 'default' as const,
+        className: 'bg-green-100 text-green-800 border-green-200',
+        label: 'Approved',
+        icon: CheckCircle
+      },
+      'ordered': {
+        variant: 'default' as const,
+        className: 'bg-blue-100 text-blue-800 border-blue-200',
+        label: 'Ordered',
+        icon: ShoppingCart
+      },
+      'delivered': {
+        variant: 'default' as const,
+        className: 'bg-green-100 text-green-800 border-green-200',
+        label: 'Delivered',
+        icon: CheckCircle
+      },
+      'delayed': {
+        variant: 'destructive' as const,
+        className: '',
+        label: 'Delayed',
+        icon: AlertTriangle
+      },
     };
-    
+
     const badge = badges[status];
     const Icon = badge.icon;
-    
+
     return (
-      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${badge.bg} ${badge.text}`}>
-        <Icon className="w-3 h-3" />
+      <Badge variant={badge.variant} className={badge.className}>
+        <Icon className="w-3 h-3 mr-1" />
         {badge.label}
-      </span>
+      </Badge>
     );
   };
 
@@ -89,24 +124,33 @@ export default function POProcessing({ onOpenChat }: POProcessingProps) {
         <div>
           <h1 className="text-3xl font-semibold text-gray-900 mb-2">PO Processing</h1>
           <div className="flex items-center gap-4">
-            <select className="px-3 py-1 border border-gray-300 rounded-lg text-sm">
-              <option>This Month</option>
-              <option>Last 30 Days</option>
-              <option>Last Quarter</option>
-              <option>Custom</option>
-            </select>
-            <select 
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+            <Select defaultValue="this-month">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select date range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="this-month">This Month</SelectItem>
+                <SelectItem value="last-30-days">Last 30 Days</SelectItem>
+                <SelectItem value="last-quarter">Last Quarter</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onValueChange={(value) => setStatusFilter(value)}
             >
-              <option value="all">All Status</option>
-              <option value="pending-approval">Pending Approval</option>
-              <option value="approved">Approved</option>
-              <option value="ordered">Ordered</option>
-              <option value="delivered">Delivered</option>
-              <option value="delayed">Delayed</option>
-            </select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending-approval">Pending Approval</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="ordered">Ordered</SelectItem>
+                <SelectItem value="delivered">Delivered</SelectItem>
+                <SelectItem value="delayed">Delayed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -114,147 +158,156 @@ export default function POProcessing({ onOpenChat }: POProcessingProps) {
       {/* Top Row - PO Metrics */}
       <div className="grid grid-cols-3 gap-6">
         {/* Card 1: Active POs */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="text-sm text-gray-600 mb-2">Active POs</div>
-              <div className="text-4xl font-medium text-gray-900">124</div>
-              <div className="text-sm text-gray-600">open purchase orders</div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="text-sm text-gray-600 mb-2">Active POs</div>
+                <div className="text-4xl font-medium text-gray-900">124</div>
+                <div className="text-sm text-gray-600">open purchase orders</div>
+              </div>
+              <ShoppingCart className="w-8 h-8 text-[#2E5C8A]" />
             </div>
-            <ShoppingCart className="w-8 h-8 text-[#2E5C8A]" />
-          </div>
-          <div className="pt-4 border-t border-gray-200">
-            <div className="text-lg font-medium text-gray-900 mb-3">$487,340</div>
-            <div className="space-y-2">
+            <div className="pt-4 border-t border-gray-200">
+              <div className="text-lg font-medium text-gray-900 mb-3">$487,340</div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">On time:</span>
+                  <span className="font-medium text-green-600">89</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Delayed:</span>
+                  <span className="font-medium text-red-600">35</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 2: Processing Speed */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="text-sm text-gray-600 mb-2">Processing Speed</div>
+                <div className="text-4xl font-medium text-green-600">2.1</div>
+                <div className="text-sm text-gray-600">min avg PO creation</div>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Clock className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+            <div className="space-y-2 pt-4 border-t border-gray-200">
+              <div className="text-sm text-gray-600">
+                vs 15 min manual (est.)
+              </div>
+              <div className="text-lg font-medium text-gray-900 mt-2">8.7 hours</div>
+              <div className="text-sm text-gray-600">saved this week</div>
+              <div className="flex items-center gap-1 text-sm text-green-600 mt-2">
+                <TrendingUp className="w-4 h-4" />
+                <span>+18% efficiency gain</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 3: Fulfillment Status */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="text-sm text-gray-600 mb-2">On-Time Delivery Rate</div>
+                <div className="text-4xl font-medium text-yellow-600">72%</div>
+                <div className="text-sm text-gray-600">this month</div>
+              </div>
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-yellow-600" />
+              </div>
+            </div>
+            <div className="space-y-2 pt-4 border-t border-gray-200">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">On time:</span>
                 <span className="font-medium text-green-600">89</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Delayed:</span>
-                <span className="font-medium text-red-600">35</span>
+                <span className="font-medium text-red-600">23</span>
               </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Pending:</span>
+                <span className="font-medium text-gray-900">12</span>
+              </div>
+              <Badge variant="destructive" className="mt-2">
+                ⚠ 5 critical POs at risk
+              </Badge>
             </div>
-          </div>
-        </div>
-
-        {/* Card 2: Processing Speed */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="text-sm text-gray-600 mb-2">Processing Speed</div>
-              <div className="text-4xl font-medium text-green-600">2.1</div>
-              <div className="text-sm text-gray-600">min avg PO creation</div>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-          <div className="space-y-2 pt-4 border-t border-gray-200">
-            <div className="text-sm text-gray-600">
-              vs 15 min manual (est.)
-            </div>
-            <div className="text-lg font-medium text-gray-900 mt-2">8.7 hours</div>
-            <div className="text-sm text-gray-600">saved this week</div>
-            <div className="flex items-center gap-1 text-sm text-green-600 mt-2">
-              <TrendingUp className="w-4 h-4" />
-              <span>+18% efficiency gain</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Fulfillment Status */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="text-sm text-gray-600 mb-2">On-Time Delivery Rate</div>
-              <div className="text-4xl font-medium text-yellow-600">72%</div>
-              <div className="text-sm text-gray-600">this month</div>
-            </div>
-            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-yellow-600" />
-            </div>
-          </div>
-          <div className="space-y-2 pt-4 border-t border-gray-200">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">On time:</span>
-              <span className="font-medium text-green-600">89</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Delayed:</span>
-              <span className="font-medium text-red-600">23</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Pending:</span>
-              <span className="font-medium text-gray-900">12</span>
-            </div>
-            <div className="inline-block px-3 py-1 bg-red-100 text-red-800 text-xs rounded-full mt-2">
-              ⚠ 5 critical POs at risk
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <button className="px-4 py-2 bg-[#2E5C8A] text-white rounded-lg hover:bg-[#244A6E] transition-colors text-sm">
+          <Button className="bg-[#2E5C8A] hover:bg-[#244A6E]">
             Create New PO
-          </button>
-          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+          </Button>
+          <Button variant="outline">
             Export to CSV
-          </button>
+          </Button>
         </div>
-        <button
+        <Button
+          variant="outline"
           onClick={() => setShowCharts(!showCharts)}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
         >
           {showCharts ? 'Show Table Only' : 'Show Charts'}
-        </button>
+        </Button>
       </div>
 
       {/* Main Section - PO Table or Charts */}
       {!showCharts ? (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <Card>
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left">
-                    <input type="checkbox" className="rounded border-gray-300" />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">PO #</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Vendor</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Requested By</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Expected Delivery</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox />
+                  </TableHead>
+                  <TableHead>PO #</TableHead>
+                  <TableHead>Vendor</TableHead>
+                  <TableHead>Requested By</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Expected Delivery</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredPOs.map((po) => (
-                  <tr 
-                    key={po.id} 
-                    className={`hover:bg-gray-50 ${po.status === 'delayed' ? 'bg-red-50' : ''}`}
+                  <TableRow
+                    key={po.id}
+                    className={po.status === 'delayed' ? 'bg-red-50' : ''}
                   >
-                    <td className="px-6 py-4">
-                      <input type="checkbox" className="rounded border-gray-300" />
-                    </td>
-                    <td className="px-6 py-4">
-                      <button className="text-[#2E5C8A] hover:underline font-medium">
+                    <TableCell>
+                      <Checkbox />
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="link"
+                        className="text-[#2E5C8A] p-0 h-auto font-medium"
+                      >
                         {po.poNumber}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-gray-900">{po.vendor}</td>
-                    <td className="px-6 py-4 text-gray-600">{po.requestedBy}</td>
-                    <td className="px-6 py-4 text-gray-900 font-medium">
+                      </Button>
+                    </TableCell>
+                    <TableCell className="text-gray-900">{po.vendor}</TableCell>
+                    <TableCell className="text-gray-600">{po.requestedBy}</TableCell>
+                    <TableCell className="text-gray-900 font-medium">
                       ${po.amount.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       {getStatusBadge(po.status)}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="text-sm text-gray-900">{po.expectedDelivery}</div>
                       {po.daysUntilDelivery < 0 && (
                         <div className="text-xs text-red-600 font-medium">
@@ -266,118 +319,137 @@ export default function POProcessing({ onOpenChat }: POProcessingProps) {
                           {po.daysUntilDelivery} days remaining
                         </div>
                       )}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setSelectedPO(po)}
-                          className="p-1 hover:bg-gray-100 rounded"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4 text-gray-600" />
-                        </button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedPO(po)}
+                              >
+                                <Eye className="w-4 h-4 text-gray-600" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>View Details</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         {po.status === 'pending-approval' && (
-                          <button className="p-1 hover:bg-gray-100 rounded" title="Approve">
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                          </button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <CheckCircle className="w-4 h-4 text-green-600" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Approve</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        </div>
+        </Card>
       ) : (
         <div className="grid grid-cols-2 gap-6">
           {/* PO Volume by Supplier */}
-          <div className="bg-white rounded-lg p-6 shadow-sm col-span-2">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">PO Volume by Supplier</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={volumeBySupplier}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="supplier" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Legend />
-                <Bar yAxisId="left" dataKey="count" fill="#2E5C8A" name="PO Count" />
-                <Bar yAxisId="right" dataKey="value" fill="#10B981" name="Total Value ($)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <Card className="col-span-2">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">PO Volume by Supplier</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={volumeBySupplier}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="supplier" />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" />
+                  <RechartsTooltip />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="count" fill="#2E5C8A" name="PO Count" />
+                  <Bar yAxisId="right" dataKey="value" fill="#10B981" name="Total Value ($)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
           {/* On-time vs Delayed Trend */}
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">On-time vs Delayed Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={deliveryTrend}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Area type="monotone" dataKey="onTime" stackId="1" stroke="#10B981" fill="#10B981" name="On Time" />
-                <Area type="monotone" dataKey="delayed" stackId="1" stroke="#EF4444" fill="#EF4444" name="Delayed" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">On-time vs Delayed Trend</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={deliveryTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="week" />
+                  <YAxis />
+                  <RechartsTooltip />
+                  <Legend />
+                  <Area type="monotone" dataKey="onTime" stackId="1" stroke="#10B981" fill="#10B981" name="On Time" />
+                  <Area type="monotone" dataKey="delayed" stackId="1" stroke="#EF4444" fill="#EF4444" name="Delayed" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
           {/* Average PO Value Over Time */}
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Average PO Value Over Time</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={avgValueTrend}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="value" stroke="#2E5C8A" strokeWidth={2} name="Avg PO Value ($)" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Average PO Value Over Time</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={avgValueTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <RechartsTooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="value" stroke="#2E5C8A" strokeWidth={2} name="Avg PO Value ($)" />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* Right Sidebar - AI Assistant */}
-      <div className="bg-white rounded-lg p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Ask about purchase orders...</h3>
-        <input
-          type="text"
-          placeholder="e.g., 'Show me delayed POs from XYZ Supplier'"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2E5C8A] focus:border-transparent"
-          onClick={onOpenChat}
-          readOnly
-        />
-        <div className="flex flex-wrap gap-2 mt-3">
-          <button className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200">
-            What's causing delays this month?
-          </button>
-          <button className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200">
-            PO volume by department
-          </button>
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Ask about purchase orders...</h3>
+          <Input
+            type="text"
+            placeholder="e.g., 'Show me delayed POs from XYZ Supplier'"
+            onClick={onOpenChat}
+            readOnly
+          />
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Button variant="secondary" size="sm">
+              What's causing delays this month?
+            </Button>
+            <Button variant="secondary" size="sm">
+              PO volume by department
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Simple PO Details Modal */}
-      {selectedPO && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900">Purchase Order Details</h2>
-                <p className="text-gray-600">{selectedPO.poNumber}</p>
-              </div>
-              <button
-                onClick={() => setSelectedPO(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <XCircle className="w-6 h-6 text-gray-600" />
-              </button>
-            </div>
-            
+      {/* PO Details Dialog */}
+      <Dialog open={!!selectedPO} onOpenChange={(open) => !open && setSelectedPO(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Purchase Order Details</DialogTitle>
+            <DialogDescription>
+              {selectedPO?.poNumber}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedPO && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -402,7 +474,9 @@ export default function POProcessing({ onOpenChat }: POProcessingProps) {
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 pt-4 mt-4">
+              <Separator />
+
+              <div>
                 <h3 className="font-medium text-gray-900 mb-3">Line Items</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -420,7 +494,9 @@ export default function POProcessing({ onOpenChat }: POProcessingProps) {
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 pt-4 mt-4">
+              <Separator />
+
+              <div>
                 <h3 className="font-medium text-gray-900 mb-3">Approval Workflow</h3>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
@@ -439,22 +515,22 @@ export default function POProcessing({ onOpenChat }: POProcessingProps) {
                   )}
                 </div>
               </div>
-
-              <div className="flex gap-3 pt-4">
-                <button className="flex-1 px-4 py-2 bg-[#2E5C8A] text-white rounded-lg hover:bg-[#244A6E]">
-                  Download PDF
-                </button>
-                <button 
-                  onClick={() => setSelectedPO(null)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  Close
-                </button>
-              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+
+          <DialogFooter>
+            <Button className="bg-[#2E5C8A] hover:bg-[#244A6E]">
+              Download PDF
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setSelectedPO(null)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
